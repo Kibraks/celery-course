@@ -1,0 +1,67 @@
+version: '3.9'
+
+services:
+  web:
+    container_name: web
+    build: .
+    ports:
+      - 8000:8000
+    volumes:
+      - ./:/app
+    depends_on:
+      - redis
+      - db
+      - worker
+    env_file:
+      - ./.env/.env.dev-sample
+    entrypoint: ./scripts/web_entrypoint.sh
+    command: poetry run python manage.py runserver 0.0.0.0:8000
+  
+  db:
+    container_name: db
+    image: postgres:14-alpine
+    volumes:
+      - pgdata:/var/lib/postgresql/data 
+    env_file:
+      - ./.env/.env.db-sample
+
+  redis:
+    container_name: redis
+    image: redis:7-alpine
+  
+  worker:
+    container_name: worker
+    build: .
+    env_file:
+      - ./.env/.env.db-sample
+    volumes:
+      - ./:/app
+    command: poetry run celery -A config worker --loglevel info
+  
+  beat:
+    container_name: beat
+    build: .
+    env_file:
+      - ./.env/.env.dev-sample
+    volumes:
+      - ./:/app
+    command: poetry run celery -A config beat --loglevel info
+
+  flower:
+    container_name: flower
+    build: .
+    ports:
+      - 5555:5555
+    depends_on:
+      - worker
+      - redis
+    env_file:
+      - ./.env/.env.dev-sample
+    volumes:
+      - ./:/app
+    entrypoint: ./scripts/flower_entrypoint.sh
+    command: poetry run celery -A config flower --port=5555
+
+
+volumes:
+  pgdata:
