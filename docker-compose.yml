@@ -36,7 +36,7 @@ services:
       - ./.env/.env.db-sample
     volumes:
       - ./:/app
-    command: poetry run celery -A config worker --loglevel info
+    command: poetry run watchfiles --filter python 'celery -A config worker --loglevel info'
   
   beat:
     container_name: beat
