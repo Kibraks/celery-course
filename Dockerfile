@@ -14,7 +14,9 @@ RUN apt-get update && \
         gcc \
         build-essential \
         libpq-dev \
-        python3-dev && \
+        python3-dev \
+        procps \
+        telnet && \
     pip install --upgrade pip && \
     pip install poetry && \
     poetry install --no-root
